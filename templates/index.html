@@ -1,0 +1,249 @@
+<!-- templates/index.html -->
+<!-- Module: ODOCO Control Panel UI (WAN/LAN Router Dashboard) -->
+
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ODOCO Control Panel</title>
+    <link rel="stylesheet" href="/frontend/css/styles.css">
+
+</head>
+
+<body>
+    <div class="wrap">
+
+        <header>
+            <div class="brand">
+                <div class="logo"></div>
+                <div class="title">
+                    <h1>ODOCO Control Panel</h1>
+                    <p>WAN/LAN Router Dashboard • <span id="lastUpdate" class="muted">—</span></p>
+                </div>
+            </div>
+            <div class="btns">
+                <button class="primary" id="btnRefresh">↻ Refrescar</button>
+                <button id="btnScan">📡 Escanear redes</button>
+                <button id="btnInternet">🌐 Probar internet</button>
+                <button class="danger" id="btnClearLog">🧹 Log</button>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="overview">Overview</div>
+            <div class="tab" data-tab="networks">WAN Networks</div>
+            <div class="tab" data-tab="clients">Clients</div>
+        </div>
+
+        <!-- OVERVIEW -->
+        <section id="tab-overview" class="grid">
+            <div class="card span4">
+                <h3>Access Point / LAN</h3>
+                <div class="kpi">
+                    <div>
+                        <div class="big" id="apSsid">—</div>
+                        <div class="muted" style="font-size:12px;margin-top:4px">
+                            IF: <code id="apIface">—</code> • IP: <code id="apIp">—</code>
+                        </div>
+                    </div>
+                    <span class="pill" id="apPill">—</span>
+                </div>
+                <div class="meta">
+                    <div>DHCP: <code id="dhcpRange">—</code></div>
+                    <div class="muted">Tip: si tenés Ethernet conectado, Windows prioriza esa ruta.</div>
+                </div>
+            </div>
+
+            <div class="card span4">
+                <h3>WAN Status (wlan0)</h3>
+                <div class="kpi">
+                    <div>
+                        <div class="big" id="wanConn">—</div>
+                        <div class="muted" style="font-size:12px;margin-top:4px">
+                            Estado: <code id="wanState">—</code>
+                        </div>
+                    </div>
+                    <span class="pill" id="wanPill">—</span>
+                </div>
+                <div class="meta">
+                    <div>WAN IP: <code id="wanIp">—</code></div>
+                    <div>GW: <code id="wanGw">—</code></div>
+                    <div class="muted" id="wanRoute">—</div>
+                </div>
+            </div>
+
+            <div class="card span4">
+                <h3>Servicios</h3>
+                <div class="kpi">
+                    <div>
+                        <div class="big" id="svcTitle">—</div>
+                        <div class="muted" style="font-size:12px;margin-top:4px">hostapd / dnsmasq</div>
+                    </div>
+                    <span class="pill" id="svcPill">—</span>
+                </div>
+                <div class="meta">
+                    <div>hostapd: <code id="svcHostapd">—</code></div>
+                    <div>dnsmasq: <code id="svcDnsmasq">—</code></div>
+                    <div>DNS: <span id="dnsList" class="muted">—</span></div>
+                </div>
+            </div>
+
+            <div class="panel span6">
+                <div class="panelHeader">
+                    <div>
+                        <h2>Clientes (DHCP leases)</h2>
+                        <div class="sub">Dispositivos conectados al AP (dnsmasq.leases)</div>
+                    </div>
+                    <div class="rowActions">
+                        <button class="small" id="btnAuto">⏱️ Auto (5s): OFF</button>
+                        <button class="small" id="btnLoadClients">↻ Cargar</button>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>IP</th>
+                            <th>MAC</th>
+                            <th>Hostname</th>
+                            <th>Expira (min)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientsBody">
+                        <tr>
+                            <td colspan="4" class="muted">Cargando…</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="panel span6">
+                <div class="panelHeader">
+                    <div>
+                        <h2>Servidor activo</h2>
+                        <div class="sub">Desde tu DB (Server.is_active)</div>
+                    </div>
+                    <div class="rowActions">
+                        <button class="small ghost" id="btnCopyServer">📋 Copiar</button>
+                    </div>
+                </div>
+                <div class="meta" id="serverBox">
+                    <div class="muted">Cargando…</div>
+                </div>
+
+                <div class="log" id="log"></div>
+            </div>
+        </section>
+
+        <!-- NETWORKS -->
+        <section id="tab-networks" class="grid hidden">
+            <div class="panel span12">
+                <div class="panelHeader">
+                    <div>
+                        <h2>WAN Networks (wlan0)</h2>
+                        <div class="sub">Escaneo por nmcli • Conectar abre modal</div>
+                    </div>
+                    <div class="rowActions">
+                        <button class="small" id="btnScan2">📡 Escanear</button>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>SSID</th>
+                            <th class="sig">Señal</th>
+                            <th>Seguridad</th>
+                            <th>Estado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="netBody">
+                        <tr>
+                            <td colspan="5" class="muted">Cargando…</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- CLIENTS -->
+        <section id="tab-clients" class="grid hidden">
+            <div class="panel span12">
+                <div class="panelHeader">
+                    <div>
+                        <h2>Clients</h2>
+                        <div class="sub">Vista completa de leases</div>
+                    </div>
+                    <div class="rowActions">
+                        <button class="small" id="btnClients2">↻ Cargar</button>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>IP</th>
+                            <th>MAC</th>
+                            <th>Hostname</th>
+                            <th>ClientID</th>
+                            <th>Expiry epoch</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientsFullBody">
+                        <tr>
+                            <td colspan="5" class="muted">Cargando…</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Modal -->
+    <div class="modalBack" id="modalBack" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true">
+            <h3>Conectar a red (WAN)</h3>
+            <p>Esto usa <code>POST /wan/connect</code>. Recomendado hacerlo desde LAN (AP) para no perder sesión.</p>
+
+            <div class="field">
+                <label>SSID</label>
+                <input id="mSsid" readonly />
+            </div>
+
+            <div class="field">
+                <label>Seguridad</label>
+                <input id="mSec" readonly />
+            </div>
+
+            <div class="field">
+                <label>Contraseña</label>
+                <input id="mPass" type="password" placeholder="••••••••" />
+            </div>
+
+            <div class="field">
+                <label>Wait (sec)</label>
+                <select id="mWait">
+                    <option value="10">10</option>
+                    <option value="20" selected>20</option>
+                    <option value="30">30</option>
+                    <option value="45">45</option>
+                    <option value="60">60</option>
+                </select>
+            </div>
+
+            <div class="muted" id="mMsg" style="min-height:18px;margin:6px 0 10px"></div>
+
+            <div class="modalBtns">
+                <button id="mCancel">Cancelar</button>
+                <button class="primary" id="mConnect">Conectar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/frontend/js/app.js"></script>
+
+
+</body>
+
+</html>

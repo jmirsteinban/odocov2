@@ -1,0 +1,410 @@
+/* frontend/css/styles.css */
+/* Module: ODOCO Control Panel global styles */
+
+:root {
+    --bg: #0b1020;
+    --panel: #121a33;
+    --panel2: #0f1730;
+    --text: #e9eeff;
+    --muted: #aab3d6;
+    --line: rgba(255, 255, 255, .08);
+    --good: #28c76f;
+    --warn: #ff9f43;
+    --bad: #ea5455;
+    --accent: #6c7cff;
+    --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+    --radius: 16px;
+}
+
+* {
+    box-sizing: border-box
+}
+
+body {
+    margin: 0;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    background:
+        radial-gradient(1100px 700px at 20% 0%, rgba(108, 124, 255, .25), transparent 60%),
+        radial-gradient(900px 600px at 100% 20%, rgba(40, 199, 111, .12), transparent 60%),
+        var(--bg);
+    color: var(--text);
+}
+
+.wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px
+}
+
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, rgba(18, 26, 51, .9), rgba(15, 23, 48, .9));
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 12px;
+    backdrop-filter: blur(10px);
+    z-index: 10;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px
+}
+
+.logo {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), #9b6cff);
+    box-shadow: 0 8px 18px rgba(108, 124, 255, .25);
+}
+
+.title {
+    line-height: 1.1
+}
+
+.title h1 {
+    margin: 0;
+    font-size: 18px
+}
+
+.title p {
+    margin: 2px 0 0;
+    color: var(--muted);
+    font-size: 13px
+}
+
+.btns {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap
+}
+
+button {
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, .03);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: .15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+button:hover {
+    transform: translateY(-1px);
+    border-color: rgba(255, 255, 255, .16)
+}
+
+button.primary {
+    background: rgba(108, 124, 255, .18);
+    border-color: rgba(108, 124, 255, .35)
+}
+
+button.danger {
+    background: rgba(234, 84, 85, .14);
+    border-color: rgba(234, 84, 85, .3)
+}
+
+button.ghost {
+    background: transparent
+}
+
+.grid {
+    margin-top: 18px;
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(12, 1fr);
+}
+
+.card {
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(18, 26, 51, .85), rgba(15, 23, 48, .85));
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 14px;
+    min-height: 110px;
+}
+
+.span4 {
+    grid-column: span 4;
+}
+
+.span6 {
+    grid-column: span 6;
+}
+
+.span12 {
+    grid-column: span 12;
+}
+
+.card h3 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 600;
+    letter-spacing: .3px
+}
+
+.kpi {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 10px
+}
+
+.kpi .big {
+    font-size: 18px;
+    font-weight: 700
+}
+
+.pill {
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, .03);
+    color: var(--muted)
+}
+
+.pill.good {
+    color: #b7ffda;
+    border-color: rgba(40, 199, 111, .35);
+    background: rgba(40, 199, 111, .12)
+}
+
+.pill.bad {
+    color: #ffd0d0;
+    border-color: rgba(234, 84, 85, .35);
+    background: rgba(234, 84, 85, .12)
+}
+
+.pill.warn {
+    color: #ffe0b6;
+    border-color: rgba(255, 159, 67, .35);
+    background: rgba(255, 159, 67, .12)
+}
+
+.meta {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 12px;
+    display: grid;
+    gap: 6px
+}
+
+code {
+    color: #d7ddff;
+    background: rgba(255, 255, 255, .04);
+    padding: 2px 6px;
+    border-radius: 8px;
+    border: 1px solid var(--line)
+}
+
+.panel {
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(18, 26, 51, .75), rgba(15, 23, 48, .75));
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 14px;
+}
+
+.panelHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap
+}
+
+.panelHeader h2 {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text)
+}
+
+.sub {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 4px
+}
+
+.rowActions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px
+}
+
+th,
+td {
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    font-size: 13px
+}
+
+th {
+    color: var(--muted);
+    font-weight: 600
+}
+
+.ssid {
+    font-weight: 700
+}
+
+.inuse {
+    color: #b7ffda
+}
+
+.sig {
+    width: 170px
+}
+
+.bar {
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid var(--line);
+    overflow: hidden;
+}
+
+.fill {
+    height: 100%
+}
+
+.small {
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: 12px
+}
+
+.muted {
+    color: var(--muted)
+}
+
+.tabs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 14px
+}
+
+.tab {
+    padding: 8px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    cursor: pointer
+}
+
+.tab.active {
+    border-color: rgba(108, 124, 255, .45);
+    background: rgba(108, 124, 255, .14)
+}
+
+.hidden {
+    display: none !important;
+}
+
+.log {
+    margin-top: 14px;
+    background: rgba(0, 0, 0, .25);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 10px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono";
+    font-size: 12px;
+    color: #cdd5ff;
+    max-height: 150px;
+    overflow: auto;
+}
+
+/* Modal */
+.modalBack {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    z-index: 50;
+}
+
+.modal {
+    width: min(520px, 100%);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(18, 26, 51, .95), rgba(15, 23, 48, .95));
+    box-shadow: var(--shadow);
+    padding: 14px;
+}
+
+.modal h3 {
+    margin: 0 0 6px
+}
+
+.modal p {
+    margin: 0 0 14px;
+    color: var(--muted);
+    font-size: 13px
+}
+
+.field {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 12px
+}
+
+label {
+    font-size: 12px;
+    color: var(--muted)
+}
+
+input,
+select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, .03);
+    color: var(--text);
+    outline: none;
+}
+
+.modalBtns {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap
+}
+
+@media (max-width: 900px) {
+
+    .span4,
+    .span6 {
+        grid-column: span 12;
+    }
+
+    .sig {
+        width: 130px
+    }
+
+    header {
+        position: static
+    }
+}
