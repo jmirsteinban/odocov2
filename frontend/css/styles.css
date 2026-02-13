@@ -55,7 +55,8 @@ header {
 .brand {
     display: flex;
     align-items: center;
-    gap: 12px
+    gap: 12px;
+    cursor: pointer;
 }
 
 .logo {
@@ -386,6 +387,33 @@ select {
     outline: none;
 }
 
+/* --- Dark select dropdown fix --- */
+
+select {
+    background-color: rgba(255, 255, 255, .03);
+    color: var(--text);
+    border: 1px solid var(--line);
+}
+
+/* Opciones del dropdown */
+select option {
+    background-color: #121a33;
+    /* mismo tono que tus cards */
+    color: var(--text);
+}
+
+/* Hover sobre opciones (Chrome / Edge) */
+select option:hover {
+    background-color: rgba(108, 124, 255, .25);
+}
+
+/* Para Firefox */
+select:-moz-focusring {
+    color: transparent;
+    text-shadow: 0 0 0 var(--text);
+}
+
+
 .modalBtns {
     display: flex;
     justify-content: flex-end;
@@ -407,4 +435,50 @@ select {
     header {
         position: static
     }
+}
+
+/* --- WAN Card Settings Button --- */
+
+
+.modeCard,
+wanCard,
+.lanCard {
+    position: relative;
+}
+
+.modeCard h3,
+.lanCard h3,
+.wanCard h3 {
+    padding-right: 44px;
+}
+
+.cardGear {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, .14);
+    background: rgba(0, 0, 0, .18);
+
+    display: grid;
+    place-items: center;
+
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+
+    backdrop-filter: blur(8px);
+    transition: transform .15s ease, background .15s ease, border-color .15s ease;
+}
+
+.cardGear:hover {
+    background: rgba(255, 255, 255, .12);
+    border-color: rgba(255, 255, 255, .22);
+    transform: scale(1.2);
+}
+
+
+.cardGear:active {
+    transform: scale(0.96);
 }

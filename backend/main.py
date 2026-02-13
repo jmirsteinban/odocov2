@@ -16,6 +16,7 @@ from fastapi.templating import Jinja2Templates
 from backend.db.init_db import init_db
 from backend.routers.servers import router as servers_router
 from backend.routers.targets import router as targets_router
+from backend.routers.modes import router as modes_router
 
 from sqlalchemy import select
 from backend.db.session import SessionLocal

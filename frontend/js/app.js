@@ -6,6 +6,69 @@ let timer = null;
 
 const API_BASE = window.location.origin; // http://192.168.50.1:8000
 
+let modesCache = []; // solo cache, no hardcode
+let currentModeId = null;
+
+async function loadModesFromDB() {
+    const res = await fetchJSON("/api/modes");
+    modesCache = res.modes || [];
+
+    // poblar select
+    const sel = el("modeSelect");
+    if (sel) {
+        sel.innerHTML = modesCache.length ?
+            modesCache.map(m => `<option value="${m.id}">${escapeHTML(m.title)}</option>`).join("") :
+            `<option value="">(Sin modos)</option>`;
+    }
+
+    log(`Modes cargados: ${modesCache.length}`);
+}
+
+async function loadCurrentModeFromDB() {
+    // OJO: esto NO lo metas en loadSummary si summary no trae mode.
+    const res = await fetchJSON("/api/mode");
+    currentModeId = res.current_mode_id ?? null;
+
+    // overview input
+    if (el("modeCurrent")) el("modeCurrent").value = res.current_mode_title || "—";
+
+    // features (si el API lo manda ya armado)
+    if (el("featuresBox")) el("featuresBox").innerHTML = res.features_html || "<span class='muted'>—</span>";
+
+    // reflejar current en select
+    if (el("modeSelect") && currentModeId != null) {
+        el("modeSelect").value = String(currentModeId);
+    }
+
+    log(`Modo actual: ${res.current_mode_title || currentModeId || "—"}`);
+}
+
+el("btnModeSave")?.addEventListener("click", async () => {
+    const sel = Number(el("modeSelect")?.value || 0);
+    if (!sel) return alert("Seleccioná un modo válido.");
+
+    // Guardar (DB)
+    const res = await fetchJSON("/api/mode", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        },
+        body: JSON.stringify({
+            mode_id: sel
+        })
+    });
+
+    // Volver a leer y refrescar UI (fuente de verdad = DB)
+    await loadCurrentModeFromDB();
+
+    // opcional: si el POST devuelve title
+    log(`💾 Modo guardado: ${res?.ok ? "OK" : "?"}`);
+});
+
+
+
+
 
 function now() {
     return new Date().toLocaleTimeString();
@@ -66,6 +129,7 @@ async function loadSummary() {
     el("apIface").textContent = data.network?.ap_iface || "—";
     el("apIp").textContent = data.network?.ap_ip || "—";
     el("dhcpRange").textContent = data.network?.dhcp_range || "—";
+    el("wanIp").textContent = data.network?.wan_ip || "—";
 
     const hostapd = !!data.services?.hostapd;
     const dnsmasq = !!data.services?.dnsmasq;
@@ -91,6 +155,7 @@ async function loadSummary() {
         <div>Edition: <code>${escapeHTML(s.edition)}</code></div>
       `;
     }
+
 
     log("Summary OK (/)");
 }
@@ -239,21 +304,25 @@ async function testInternet() {
 
 async function refreshAll() {
     await loadSummary();
-    el("wanIp").textContent = (await fetchJSON("/api/summary")).network?.wan_ip || "—";
     await loadWanStatus();
     await loadClients();
 }
 
-// Tabs
+// Tabs (unificado)
 function setTab(name) {
-    document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === name));
-    el("tab-overview").classList.toggle("hidden", name !== "overview");
-    el("tab-networks").classList.toggle("hidden", name !== "networks");
-    el("tab-clients").classList.toggle("hidden", name !== "clients");
+    document.querySelectorAll("section[id^='tab-']").forEach(s => s.classList.add("hidden"));
+    const target = document.getElementById(`tab-${name}`);
+    if (!target) {
+        log(`⚠️ Tab no existe: ${name} (volviendo a overview)`);
+        document.getElementById("tab-overview")?.classList.remove("hidden");
+        return;
+    }
+    target.classList.remove("hidden");
 }
-document.querySelectorAll(".tab").forEach(t => {
-    t.addEventListener("click", () => setTab(t.dataset.tab));
-});
+
+
+
+
 
 // Events
 el("btnRefresh").addEventListener("click", refreshAll);
@@ -300,6 +369,8 @@ el("btnCopyServer").addEventListener("click", async () => {
     }
 });
 
+
+
 // table action connect
 el("netBody").addEventListener("click", (ev) => {
     const btn = ev.target.closest("button[data-action='connect']");
@@ -320,9 +391,67 @@ el("mConnect").addEventListener("click", async () => {
     }
 });
 
+
+// Click en logo / brand → volver a Overview
+el("brandHome")?.addEventListener("click", () => {
+    setTab("overview");
+    log("↩️ Volver a Overview (brand click)");
+});
+
+// ⚙️ Mode settings (abre tab modes)
+const btnModeSettings = document.getElementById("btnModeSettings");
+if (btnModeSettings) {
+    btnModeSettings.addEventListener("click", async () => {
+        setTab("modes"); // muestra #tab-modes aunque no exista el tab visible
+        try {
+
+            log("⚙️ Mode settings abierto");
+        } catch (e) {
+            log("⚠️ Error cargando redes: " + (e?.message || e));
+        }
+    });
+}
+
+// ⚙️ Lan settings (abre tab networks y hace scan)
+const btnLanSettings = document.getElementById("btnLanSettings");
+if (btnLanSettings) {
+    btnLanSettings.addEventListener("click", async () => {
+        setTab("clients"); // muestra #tab-networks aunque no exista el tab visible
+        try {
+            log("⚙️ LAN settings abierto");
+        } catch (e) {
+            log("⚠️ Error cargando redes: " + (e?.message || e));
+        }
+    });
+}
+
+// ⚙️ WAN settings (abre tab networks y hace scan)
+const btnWanSettings = document.getElementById("btnWanSettings");
+if (btnWanSettings) {
+    btnWanSettings.addEventListener("click", async () => {
+        setTab("networks"); // muestra #tab-networks aunque no exista el tab visible
+        try {
+            await scanNetworks();
+            log("⚙️ WAN settings abierto (scan ejecutado)");
+        } catch (e) {
+            log("⚠️ Error cargando redes: " + (e?.message || e));
+        }
+    });
+}
+
+
 // init
+
 (async function() {
     log("UI iniciado");
+
+
+    // UI-driven por DB
+    await loadModesFromDB();
+    await loadCurrentModeFromDB();
+    setTab("overview");
+
+    // resto
     await refreshAll();
     await scanNetworks();
 })();

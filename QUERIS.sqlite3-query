@@ -1,0 +1,82 @@
+-- database: ../../odoco.db
+
+SELECT * FROM modes;
+
+CREATE TABLE IF NOT EXISTS modes (
+  id_mode INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL UNIQUE,
+  description_html TEXT NOT NULL DEFAULT ''
+);
+
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL DEFAULT ''
+);
+INSERT OR IGNORE INTO modes (title, description_html) VALUES
+(
+'Router NAT (Default)',
+'<h3>Router NAT (Default)</h3>
+<p><b>Objetivo:</b> dar internet a clientes del AP usando WAN (wlan0) y LAN (AP).</p>
+<ul>
+  <li><b>WAN:</b> cliente Wi-Fi (wlan0)</li>
+  <li><b>LAN:</b> AP + DHCP</li>
+  <li><b>Tráfico:</b> NAT (masquerade)</li>
+</ul>'
+),
+(
+'Gateway Inteligente (NAT + Control)',
+'<h3>Gateway Inteligente (NAT + Control)</h3>
+<p><b>Objetivo:</b> NAT + control/enrutamiento “inteligente” (DNS override, redirects, logging).</p>
+<ul>
+  <li>NAT + reglas extra</li>
+  <li>DNS Override por dominio</li>
+  <li>Port Redirect (DNAT)</li>
+  <li>Logs avanzados</li>
+</ul>
+<p><i>Aquí vive perfecto Bedrock y trucos de red.</i></p>'
+),
+(
+'Bedrock Relay (Preset)',
+'<h3>Bedrock Relay (Preset)</h3>
+<p><b>Objetivo:</b> preset listo para conectar fácil a servidores externos desde el AP (ej. Aternos).</p>
+<ul>
+  <li>BedrockConnect local</li>
+  <li>DNS Override para Bedrock</li>
+  <li>UDP 19132 relay/redirect (DNAT/forward)</li>
+  <li>Lista de destinos (servers) desde DB</li>
+</ul>
+<p><i>UX: “no estar cambiando DNS en la consola”.</i></p>'
+),
+(
+'Offline LAN (Local Services)',
+'<h3>Offline LAN (Local Services)</h3>
+<p><b>Objetivo:</b> AP + servicios locales sin depender de WAN.</p>
+<ul>
+  <li>WAN opcional/desconectada</li>
+  <li>AP + DHCP + DNS local (si querés)</li>
+  <li>Servidor activo local (DB) opcional</li>
+  <li>Bloqueo de salida a Internet (si WAN aparece) opcional</li>
+</ul>'
+),
+(
+'Monitor Only (Dashboard)',
+'<h3>Monitor Only (Dashboard)</h3>
+<p><b>Objetivo:</b> observar/administrar sin tocar red.</p>
+<ul>
+  <li>No levanta AP</li>
+  <li>No toca iptables</li>
+  <li>Solo UI + lectura de estado</li>
+</ul>'
+);
+
+
+SELECT id_mode, title FROM modes ORDER BY id_mode;
+SELECT * FROM settings;
+
+DELETE FROM modes WHERE id_mode <= 4;
+SELECT * FROM modes;
+
+
+SELECT id_mode, title FROM modes ORDER BY id_mode;
+
+DELETE FROM modes;

@@ -16,7 +16,7 @@
     <div class="wrap">
 
         <header>
-            <div class="brand">
+            <div class="brand" id="brandHome">
                 <div class="logo"></div>
                 <div class="title">
                     <h1>ODOCO Control Panel</h1>
@@ -30,16 +30,38 @@
                 <button class="danger" id="btnClearLog">🧹 Log</button>
             </div>
         </header>
-
-        <div class="tabs">
-            <div class="tab active" data-tab="overview">Overview</div>
-            <div class="tab" data-tab="networks">WAN Networks</div>
-            <div class="tab" data-tab="clients">Clients</div>
-        </div>
-
         <!-- OVERVIEW -->
         <section id="tab-overview" class="grid">
-            <div class="card span4">
+
+            <div class="card span12 modeCard">
+                <button class="cardGear" id="btnModeSettings" title="Configurar modo" aria-label="Configurar modo"> ⚙️
+                </button>
+                <h3>Modo de funcionamiento</h3>
+
+                <div class="meta" style="margin-top:6px">
+                    <div>
+                        <div class="muted" style="font-size:12px;margin-bottom:6px">Modo actual</div>
+                        <input id="modeCurrent" placeholder="Cargando…" readonly />
+
+
+                    </div>
+
+                    <div>
+                        <div class="muted" style="font-size:12px;margin-bottom:6px">Features</div>
+                        <div id="featuresBox" class="muted">Cargando…</div>
+                    </div>
+
+                    <div class="muted" style="font-size:12px">
+                        Tip: esto por ahora solo “simula” y loggea acciones. Luego conectamos iptables/dnsmasq/systemd.
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="card span6 lanCard">
+                <button class="cardGear" id="btnLanSettings" title="Configurar Lan" aria-label="Configurar Lan">
+                    ⚙️
+                </button>
                 <h3>Access Point / LAN</h3>
                 <div class="kpi">
                     <div>
@@ -56,7 +78,11 @@
                 </div>
             </div>
 
-            <div class="card span4">
+            <div class="card span6 wanCard">
+                <!-- Botón engranaje fijo en esquina -->
+                <button class="cardGear" id="btnWanSettings" title="Configurar WAN" aria-label="Configurar WAN">
+                    ⚙️
+                </button>
                 <h3>WAN Status (wlan0)</h3>
                 <div class="kpi">
                     <div>
@@ -66,6 +92,7 @@
                         </div>
                     </div>
                     <span class="pill" id="wanPill">—</span>
+
                 </div>
                 <div class="meta">
                     <div>WAN IP: <code id="wanIp">—</code></div>
@@ -118,21 +145,31 @@
                 </table>
             </div>
 
-            <div class="panel span6">
+
+        </section>
+
+        <!-- MODES -->
+        <section id="tab-modes" class="grid hidden">
+            <div class="panel span12">
                 <div class="panelHeader">
                     <div>
-                        <h2>Servidor activo</h2>
-                        <div class="sub">Desde tu DB (Server.is_active)</div>
+                        <h2>Modos de Funcionamiento</h2>
+                        <div class="sub">lorem • lorem</div>
                     </div>
                     <div class="rowActions">
-                        <button class="small ghost" id="btnCopyServer">📋 Copiar</button>
+                        <button class="small" id="btnModeSave">💾 Guardar modo</button>
                     </div>
                 </div>
-                <div class="meta" id="serverBox">
-                    <div class="muted">Cargando…</div>
+                <div>
+                    <div class="field">
+                        <label>Seleccionar modo</label>
+                        <select id="modeSelect">
+                            <option value="">Cargando…</option>
+                        </select>
+                    </div>
+
                 </div>
 
-                <div class="log" id="log"></div>
             </div>
         </section>
 
@@ -172,13 +209,23 @@
             <div class="panel span12">
                 <div class="panelHeader">
                     <div>
-                        <h2>Clients</h2>
-                        <div class="sub">Vista completa de leases</div>
+                        <h2>Access Point / LAN</h2>
+                        <div class="sub">Here Lan Info</div>
                     </div>
                     <div class="rowActions">
                         <button class="small" id="btnClients2">↻ Cargar</button>
                     </div>
                 </div>
+
+                <br>
+                <div class="panelHeader">
+                    <div>
+                        <h2>Clients</h2>
+                        <div class="sub">Vista completa de leases</div>
+                    </div>
+
+                </div>
+
                 <table>
                     <thead>
                         <tr>
@@ -198,8 +245,29 @@
             </div>
         </section>
 
-    </div>
 
+
+        <section class="grid">
+            <div class="panel span12">
+                <div class="panelHeader">
+                    <div>
+                        <h2>Servidor activo</h2>
+                        <div class="sub">Desde tu DB (Server.is_active)</div>
+                    </div>
+                    <div class="rowActions">
+                        <button class="small ghost" id="btnCopyServer">📋 Copiar</button>
+                    </div>
+                </div>
+                <div class="meta" id="serverBox">
+                    <div class="muted">Cargando…</div>
+                </div>
+
+                <div class="log" id="log"></div>
+            </div>
+        </section>
+
+
+    </div>
     <!-- Modal -->
     <div class="modalBack" id="modalBack" aria-hidden="true">
         <div class="modal" role="dialog" aria-modal="true">
