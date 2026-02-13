@@ -1,124 +1,88 @@
 # ODOCO Coding Standard
 
-## 1️⃣ File Header Rule (Mandatory)
+## 1. Header por archivo Python (obligatorio)
 
-Every `.py` file must start with the following structure:
+Cada archivo `.py` debe comenzar con:
 
-``` python
+```python
 # relative/path/to/file.py
-# Module: Short and clear module description
+# Module: Descripcion corta y clara
 ```
 
-### Rules:
+Reglas:
+- Línea 1: ruta relativa desde la raíz del proyecto
+- Línea 2: descripción breve del módulo
+- Sin líneas vacías antes del header
 
--   Line 1 → Full relative path from project root
--   Line 2 → Clear module description
--   No empty lines before header
--   No decorative characters
--   Must be consistent across entire project
+## 2. Estructura del proyecto
 
-### Example:
-
-``` python
-# backend/routers/servers.py
-# Module: API Router for Server management
+```text
+backend/
+  core/       configuración, logging, constantes
+  db/         modelos, sesión, init, deps
+  routers/    capa HTTP
+  schemas/    request/response models
+  services/   lógica de negocio
 ```
 
-------------------------------------------------------------------------
+Responsabilidades:
+- `routers`: validación HTTP y orquestación
+- `services`: lógica de negocio
+- `db`: acceso a datos y persistencia
+- `schemas`: contrato de API
+- `core`: configuración transversal
 
-## 2️⃣ Project Structure Convention
+## 3. Separación de responsabilidades
 
-    backend/
-      core/        → configuration, logging, constants
-      db/          → database models, session, init, deps
-      routers/     → API endpoints only
-      schemas/     → Pydantic request/response models
-      services/    → business logic layer
+- Los routers no deben contener lógica de negocio compleja.
+- La lógica de negocio debe vivir en `services/`.
+- La sesión de DB debe provenir de `backend/db/deps.py` cuando aplique.
 
-### Responsibilities:
+## 4. Convención de API
 
-  Folder     Responsibility
-  ---------- -----------------------
-  routers    HTTP layer only
-  services   Business logic
-  db         Database access
-  schemas    API validation models
-  core       App configuration
+Preferido:
+- Exponer endpoints bajo `/api/...` para evitar conflictos con rutas de UI.
 
-------------------------------------------------------------------------
+Estado actual:
+- Hay rutas con prefijo (`/api/summary`) y sin prefijo (`/servers`, `/targets`, `/wan/...`).
+- Se permite temporalmente por compatibilidad, pero la dirección recomendada es converger a `/api`.
 
-## 3️⃣ Separation of Concerns
+## 5. Reglas de base de datos
 
--   Routers must NOT contain business logic.
--   Routers must NOT directly manipulate database models beyond CRUD.
--   Complex logic must live in `services/`.
--   Database session must come from `db/deps.py`.
+- Definir una única ubicación de SQLite y usarla en todo el proyecto.
+- Evitar archivos duplicados (`odoco.db` en raíz y `db/odoco.db` al mismo tiempo).
+- Centralizar el path en configuración.
 
-------------------------------------------------------------------------
+## 6. Convenciones de nombres
 
-## 4️⃣ Database Rules
+- Archivos: `snake_case`
+- Clases: `PascalCase`
+- Funciones: `snake_case`
+- Modelos DB: singular (`Server`, `SystemTarget`, `Mode`)
+- Tablas: `snake_case`
 
--   Only one SQLite file allowed:
+## 7. Logging
 
-        /db/odoco.db
+Registrar operaciones críticas:
+- activación/desactivación
+- cambios de red
+- cambios de configuración sensible
 
--   DB path must be defined in a central config file.
+Ejemplo:
 
--   No duplicate databases in project root.
-
-------------------------------------------------------------------------
-
-## 5️⃣ API Prefix Rule (Recommended)
-
-All API routes should be grouped under:
-
-    /api/...
-
-Example:
-
-    /api/servers
-    /api/targets
-
-This prevents conflicts with frontend HTML routes.
-
-------------------------------------------------------------------------
-
-## 6️⃣ Naming Conventions
-
-  Type        Convention
-  ----------- ---------------------------------
-  Files       snake_case
-  Classes     PascalCase
-  Functions   snake_case
-  DB Models   Singular (Server, SystemTarget)
-  Tables      snake_case
-
-------------------------------------------------------------------------
-
-## 7️⃣ Logging Rule (Future Ready)
-
-Critical operations (activation, deletion, network changes) should log
-actions.
-
-Example:
-
-``` python
-logger.info(f"Server {server_id} activated")
+```python
+logger.info("Server %s activated", server_id)
 ```
 
-------------------------------------------------------------------------
+## 8. Seguridad de refactors
 
-## 8️⃣ Refactor Safety Rule
+Antes de mover/eliminar código:
+- actualizar imports
+- validar arranque del backend
+- validar endpoints afectados
 
-Before deleting or moving files: - Update imports - Test server
-startup - Test all endpoints
+## Principios
 
-------------------------------------------------------------------------
-
-# Philosophy
-
-ODOCO is built as a modular, router-grade backend system.
-
-Clarity \> Cleverness\
-Structure \> Speed\
-Consistency \> Personal Preference
+- Claridad > complejidad
+- Estructura > velocidad puntual
+- Consistencia > preferencia individual

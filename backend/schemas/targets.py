@@ -1,3 +1,6 @@
+# backend/schemas/targets.py
+# Module: ODOCO Backend — System target API schemas
+
 from pydantic import BaseModel, Field
 
 class TargetOut(BaseModel):

@@ -1,3 +1,6 @@
+# backend/schemas/servers.py
+# Module: ODOCO Backend — Server API schemas
+
 from pydantic import BaseModel, Field
 from typing import Optional
 from .common import Edition

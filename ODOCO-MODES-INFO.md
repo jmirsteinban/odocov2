@@ -1,165 +1,90 @@
-Modos principales de ODOCO
-1) Router NAT (Default)
+# ODOCO Modes
 
-    Objetivo: dar internet a clientes del AP usando WAN (wlan0) y LAN (AP).
+Documento funcional de modos de operación para ODOCO.
 
-    - WAN: cliente Wi-Fi (wlan0)
+## 1. Router NAT (default)
 
-    - LAN: AP (wlan1) + DHCP
+Objetivo: compartir internet de WAN a clientes del AP.
 
-    - Tráfico: NAT (masquerade)
+- WAN: `wlan0` (cliente Wi-Fi)
+- LAN: AP en `wlan1` + DHCP
+- Tráfico: NAT/masquerade
 
-    Sub-opciones (toggles)
+Toggles esperados:
+- AP on/off (`hostapd`)
+- DHCP on/off (`dnsmasq`)
+- DNS local on/off
+- Internet check on/off
+- Auto-reconnect WAN on/off
+- Client list on/off (solo UI)
 
-    - AP ON/OFF (hostapd)
+## 2. Gateway Inteligente (NAT + control)
 
-    - DHCP ON/OFF (dnsmasq leases)
+Objetivo: NAT + reglas avanzadas de control/enrutado.
 
-    - DNS Local ON/OFF (dnsmasq como DNS)
+Toggles esperados:
+- DNS override por dominio
+- DNS por cliente (futuro)
+- Port redirect (DNAT)
+- Proxy HTTP(S) (futuro)
+- Captive portal (futuro)
+- Logs avanzados
 
-    - “Internet Check” ON/OFF (ping/dns checks)
+## 3. Bedrock Relay (preset)
 
-    - Auto-Reconnect WAN ON/OFF (reintentos nmcli)
+Objetivo: preset para conectar clientes del AP a servidor Bedrock externo.
 
-    - Client List / Leases Viewer ON/OFF (solo UI)
+Internamente: variante de Gateway Inteligente con reglas preconfiguradas.
 
-    ✅ Este es tu modo actual.
+Toggles esperados:
+- BedrockConnect local on/off
+- DNS override Bedrock on/off
+- UDP relay `19132` on/off
+- Lista de destinos (`servers` en DB)
+- Allowlist de clientes (futuro)
 
-2) Gateway Inteligente (NAT + Control)
+## 4. Offline LAN (servicios locales)
 
-Objetivo: lo mismo que NAT, pero además ODOCO controla/enruta “inteligente”.
+Objetivo: AP + servicios locales sin depender de WAN.
 
-Tráfico: NAT + reglas extra (DNS override, redirects, logging)
+Toggles esperados:
+- AP on/off
+- DHCP on/off
+- DNS local on/off
+- Servidor local activo on/off
+- Portal/panel local on/off
+- Bloqueo de salida a internet
 
-Sub-opciones (toggles)
+## 5. Monitor Only (dashboard)
 
-DNS Override (por dominio) ON/OFF
+Objetivo: observación y administración sin cambios de red.
 
-DNS por-cliente (solo ciertas MAC/IP) ON/OFF (futuro, pero lo dejamos previsto)
+- No levanta AP
+- No aplica reglas NAT
+- Solo estado/UI/logs
 
-Port Redirect (DNAT) ON/OFF (ej: UDP 19132 → destino)
+## Reglas de compatibilidad
 
-Proxy HTTP(S) (si algún día) ON/OFF
+- BedrockConnect, DNS override y port redirect solo en:
+  - Gateway Inteligente
+  - Bedrock Relay
+- NAT es requisito para compartir internet AP -> WAN (si no hay bridge).
+- Offline LAN puede usar servicios locales sin relay externo.
 
-Captive Portal (si algún día) ON/OFF
+## Modelo de datos y API objetivo
 
-Logs avanzados ON/OFF
+Diseño recomendado:
+- `odoco_mode` en SQLite (o config central)
+- tabla `features` (`feature_key`, `enabled`, `config_json`)
 
-✅ Aquí vive perfecto lo de Bedrock y “trucos” de red.
+Endpoints objetivo:
+- `GET /api/mode`
+- `POST /api/mode`
+- `GET /api/features`
+- `POST /api/features/{key}`
 
-3) Bedrock Relay (Preset)
+## Estado actual
 
-Objetivo: preset listo para “conectar a server externo (Aternos) fácil desde el AP”.
-Técnicamente es Gateway Inteligente, pero lo exponemos como modo para UX.
-
-Sub-opciones (toggles)
-
-BedrockConnect local ON/OFF (servicio local)
-
-DNS Override Bedrock ON/OFF (dominios necesarios → IP del router)
-
-UDP Relay 19132 ON/OFF (DNAT/forward hacia Aternos o destino definido)
-
-Lista de “Destinos” (servers): Aternos / otros (desde DB)
-
-“Solo estos clientes” (allowlist) ON/OFF (futuro)
-
-✅ Este modo te resuelve “sin estar cambiando DNS en la consola”.
-
-4) Offline LAN (Local Services)
-
-Objetivo: AP + servicios locales, sin depender de WAN.
-
-WAN: opcional / puede estar desconectado
-
-LAN: AP + DHCP + servicios
-
-Sub-opciones (toggles)
-
-AP ON/OFF
-
-DHCP ON/OFF
-
-DNS local ON/OFF
-
-“Servidor activo” local (tu Server.is_active) ON/OFF
-
-Portal local / panel ON/OFF
-
-Bloqueo de salida a internet (si WAN se conecta) ON/OFF
-
-✅ Para partidas/servicios locales, laboratorio, etc.
-
-5) Monitor Only (Dashboard)
-
-Objetivo: solo observar/administrar, sin tocar red.
-
-No levanta AP
-
-No toca iptables
-
-Solo UI + lectura de estado
-
-Sub-opciones (toggles)
-
-Mostrar WAN status ON/OFF
-
-Mostrar clients (si existen leases) ON/OFF
-
-Logs ON/OFF
-
-✅ Ideal para “no romper nada” mientras debugueás.
-
-Reglas claras de compatibilidad (para que no haya caos)
-
-BedrockConnect / DNS Override / Port Redirect solo se permiten en:
-
-Gateway Inteligente
-
-Bedrock Relay
-
-NAT es requisito para “compartir internet” del AP hacia WAN (a menos que hagas bridge).
-
-Offline LAN permite BedrockConnect “solo local” si querés, pero sin relay hacia Aternos (porque no hay WAN).
-
-Cómo se vería en UI
-
-Selector: Modo actual
-
-Router NAT
-
-Gateway Inteligente
-
-Bedrock Relay
-
-Offline LAN
-
-Monitor Only
-
-Debajo: “Features” con switches (según modo)
-
-Mi recomendación práctica para empezar
-
-Modo Router NAT (ya)
-
-Agregar Modo Bedrock Relay como preset
-
-Internamente, Bedrock Relay = Gateway Inteligente con 2–3 toggles pre-encendidos
-
-Si te parece bien esta definición, el siguiente paso es aterrizarlo a código:
-
-Un odoco_mode en SQLite (o config file)
-
-Una tabla features (feature_key, enabled, config_json)
-
-Endpoints:
-
-GET /api/mode
-
-POST /api/mode
-
-GET /api/features
-
-POST /api/features/{key}
-
-y en UI un card “Modo” + switches.
+- Existe implementación inicial en `backend/routers/modes.py`.
+- Actualmente ese router no está montado en `backend/main.py`.
+- Resultado: endpoints de modo todavía no están disponibles en runtime.
