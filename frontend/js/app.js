@@ -100,6 +100,16 @@ function sigColor(sig) {
     return `rgba(108,124,255,${op})`;
 }
 
+function setTempCfgMsg(msg, kind = "") {
+    const box = el("tempCfgMsg");
+    if (!box) return;
+    box.textContent = msg;
+    box.className = "muted";
+    if (kind === "good") box.className = "pill good";
+    if (kind === "warn") box.className = "pill warn";
+    if (kind === "bad") box.className = "pill bad";
+}
+
 async function fetchJSON(url, opts) {
 
 
@@ -123,6 +133,43 @@ async function loadSummary() {
     // Tu GET "/" devuelve JSON (no UI). Perfecto como endpoint de summary.
     const data = await fetchJSON("/api/summary");
     el("lastUpdate").textContent = `última actualización: ${now()}`;
+
+    // General (sistema)
+    const sys = data.system || {};
+    const ram = sys.ram || {};
+    const storage = sys.storage || {};
+    const tcfg = sys.temperature_thresholds || {};
+    const warnTemp = Number.isFinite(Number(tcfg.warn_c)) ? Number(tcfg.warn_c) : 60;
+    const criticalTemp = Number.isFinite(Number(tcfg.critical_c)) ? Number(tcfg.critical_c) : 75;
+
+    if (el("tempWarnInput") && document.activeElement !== el("tempWarnInput")) el("tempWarnInput").value = String(warnTemp);
+    if (el("tempCriticalInput") && document.activeElement !== el("tempCriticalInput")) el("tempCriticalInput").value = String(criticalTemp);
+    setTempCfgMsg(`Actual: alta ${warnTemp}°C • crítica ${criticalTemp}°C`);
+
+    el("generalOs").textContent = [sys.os || "", sys.kernel ? `(kernel ${sys.kernel})` : ""].join(" ").trim() || "—";
+    el("generalCpu").textContent = sys.cpu || "—";
+    if (typeof sys.temperature_c === "number") {
+        const t = sys.temperature_c;
+        el("generalTemp").textContent = `${t} °C`;
+        if (t < warnTemp) setPill(el("generalTempPill"), "Normal", "good");
+        else if (t < criticalTemp) setPill(el("generalTempPill"), "Alta", "warn");
+        else setPill(el("generalTempPill"), "Crítica", "bad");
+    } else {
+        el("generalTemp").textContent = "N/D";
+        setPill(el("generalTempPill"), "Sin dato", "");
+    }
+
+    if (ram.total_mb) {
+        el("generalRam").textContent = `${ram.used_mb} / ${ram.total_mb} MB (libre ${ram.free_mb} MB)`;
+    } else {
+        el("generalRam").textContent = "—";
+    }
+
+    if (storage.total_gb) {
+        el("generalStorage").textContent = `${storage.used_gb} / ${storage.total_gb} GB (libre ${storage.free_gb} GB)`;
+    } else {
+        el("generalStorage").textContent = "—";
+    }
 
     // AP/LAN
     el("apSsid").textContent = data.ssid || "Unknown";
@@ -295,10 +342,10 @@ async function testInternet() {
         const res = await fetchJSON("/wan/internet");
         const ok = !!res.ok;
         log(`Internet: ${ok ? "OK" : "FAIL"} • ping=${res.ping_ok} dns=${res.dns_ok}`);
-        alert(ok ? "Internet OK ✅" : "Internet FAIL ⚠️");
+        setPill(el("internetStatusPill"), ok ? "En línea" : "Sin conexión", ok ? "good" : "bad");
     } catch (e) {
-        log("Internet endpoint no existe (/wan/internet).");
-        alert("No existe /wan/internet todavía. (Opcional) Te dejo el endpoint para agregarlo.");
+        log(`Internet check ERROR: ${e.message}`);
+        setPill(el("internetStatusPill"), "Sin conexión", "bad");
     }
 }
 
@@ -331,6 +378,12 @@ el("btnScan2").addEventListener("click", scanNetworks);
 el("btnLoadClients").addEventListener("click", loadClients);
 el("btnClients2").addEventListener("click", loadClients);
 el("btnInternet").addEventListener("click", testInternet);
+el("btnInternet")?.addEventListener("keydown", (ev) => {
+    if (ev.key === "Enter" || ev.key === " ") {
+        ev.preventDefault();
+        testInternet();
+    }
+});
 
 el("btnAuto").addEventListener("click", () => {
     auto = !auto;
@@ -366,6 +419,59 @@ el("btnCopyServer").addEventListener("click", async () => {
         log("Server copiado al clipboard");
     } catch (e) {
         log("No se pudo copiar server");
+    }
+});
+
+el("btnTempSave")?.addEventListener("click", async () => {
+    const warnRaw = (el("tempWarnInput")?.value || "").trim();
+    const criticalRaw = (el("tempCriticalInput")?.value || "").trim();
+    const warn = Number(warnRaw);
+    const critical = Number(criticalRaw);
+
+    if (!Number.isFinite(warn) || !Number.isFinite(critical)) {
+        setTempCfgMsg("Ingresá ambos umbrales como números válidos.", "bad");
+        return;
+    }
+    if (warn <= 0 || critical <= 0) {
+        setTempCfgMsg("Los umbrales deben ser mayores que 0.", "bad");
+        return;
+    }
+    if (warn >= critical) {
+        setTempCfgMsg("El umbral Alta debe ser menor que Crítica.", "bad");
+        return;
+    }
+
+    setTempCfgMsg("Guardando umbrales…", "warn");
+    try {
+        await Promise.all([
+            fetchJSON("/targets/cpu_temp_warn_c", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    value: String(warn)
+                })
+            }),
+            fetchJSON("/targets/cpu_temp_critical_c", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    value: String(critical)
+                })
+            })
+        ]);
+
+        await loadSummary();
+        setTempCfgMsg(`Guardado: alta ${warn}°C • crítica ${critical}°C`, "good");
+        log(`Umbrales CPU actualizados: warn=${warn} critical=${critical}`);
+    } catch (e) {
+        setTempCfgMsg(`Error al guardar: ${e.message}`, "bad");
+        log(`ERROR guardando umbrales CPU: ${e.message}`);
     }
 });
 
@@ -408,6 +514,19 @@ if (btnModeSettings) {
             log("⚙️ Mode settings abierto");
         } catch (e) {
             log("⚠️ Error cargando redes: " + (e?.message || e));
+        }
+    });
+}
+
+// ⚙️ General settings (abre tab general-config)
+const btnGeneralSettings = document.getElementById("btnGeneralSettings");
+if (btnGeneralSettings) {
+    btnGeneralSettings.addEventListener("click", async () => {
+        setTab("general-config");
+        try {
+            log("⚙️ General settings abierto");
+        } catch (e) {
+            log("⚠️ Error abriendo Configuración General: " + (e?.message || e));
         }
     });
 }

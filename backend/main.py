@@ -3,6 +3,8 @@
 
 
 from fastapi import FastAPI
+import platform
+import shutil
 import subprocess
 import re
 import time
@@ -10,7 +12,7 @@ from pathlib import Path
 
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi import Request
+from fastapi import Request, Response
 from fastapi.templating import Jinja2Templates
 
 from backend.db.init_db import init_db
@@ -20,7 +22,7 @@ from backend.routers.modes import router as modes_router
 
 from sqlalchemy import select
 from backend.db.session import SessionLocal
-from backend.db.models import Server
+from backend.db.models import Server, SystemTarget
 
 import shlex
 from pydantic import BaseModel, Field
@@ -33,6 +35,7 @@ app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
 init_db()
 app.include_router(servers_router)
 app.include_router(targets_router)
+app.include_router(modes_router)
 
 templates = Jinja2Templates(directory="templates")
 
@@ -339,6 +342,144 @@ def get_service_active(service: str) -> bool:
     out = sh(f"systemctl is-active {service}")
     return out.strip() == "active"
 
+def read_os_info() -> str:
+    p = Path("/etc/os-release")
+    if p.exists():
+        for ln in p.read_text(errors="ignore").splitlines():
+            if ln.startswith("PRETTY_NAME="):
+                return ln.split("=", 1)[1].strip().strip('"')
+    return platform.platform()
+
+def read_cpu_model() -> str:
+    p = Path("/proc/cpuinfo")
+    if p.exists():
+        lines = p.read_text(errors="ignore").splitlines()
+
+        # x86 typically exposes "model name", Raspberry Pi often exposes "Model".
+        preferred_keys = ("model name", "model", "hardware", "cpu part")
+        for key in preferred_keys:
+            for ln in lines:
+                if ":" not in ln:
+                    continue
+                k, v = ln.split(":", 1)
+                if k.strip().lower() == key and v.strip():
+                    return v.strip()
+
+        # Last-resort fallback for environments with sparse cpuinfo.
+        for ln in lines:
+            if ":" not in ln:
+                continue
+            k, v = ln.split(":", 1)
+            if k.strip().lower() == "processor" and v.strip():
+                return f"CPU {v.strip()}"
+
+    return platform.processor() or "Unknown"
+
+def read_cpu_temperature_c() -> Optional[float]:
+    candidates = [
+        "/sys/class/thermal/thermal_zone0/temp",
+        "/sys/devices/virtual/thermal/thermal_zone0/temp",
+    ]
+    for p in candidates:
+        fp = Path(p)
+        if not fp.exists():
+            continue
+        raw = fp.read_text(errors="ignore").strip()
+        if not raw:
+            continue
+        try:
+            val = float(raw)
+            # Typical Linux thermal files report milli-degrees C.
+            return round((val / 1000.0) if val > 300 else val, 1)
+        except ValueError:
+            continue
+    return None
+
+def read_ram_info() -> dict:
+    p = Path("/proc/meminfo")
+    if not p.exists():
+        return {"total_mb": 0, "used_mb": 0, "free_mb": 0}
+
+    total_kb = 0
+    available_kb = 0
+    for ln in p.read_text(errors="ignore").splitlines():
+        if ln.startswith("MemTotal:"):
+            parts = ln.split()
+            if len(parts) >= 2 and parts[1].isdigit():
+                total_kb = int(parts[1])
+        elif ln.startswith("MemAvailable:"):
+            parts = ln.split()
+            if len(parts) >= 2 and parts[1].isdigit():
+                available_kb = int(parts[1])
+
+    used_kb = max(total_kb - available_kb, 0)
+    return {
+        "total_mb": round(total_kb / 1024, 1),
+        "used_mb": round(used_kb / 1024, 1),
+        "free_mb": round(available_kb / 1024, 1),
+    }
+
+def read_storage_info() -> dict:
+    try:
+        total, used, free = shutil.disk_usage("/")
+    except Exception:
+        return {"total_gb": 0, "used_gb": 0, "free_gb": 0}
+
+    gb = 1024 * 1024 * 1024
+    return {
+        "total_gb": round(total / gb, 1),
+        "used_gb": round(used / gb, 1),
+        "free_gb": round(free / gb, 1),
+    }
+
+def read_network_interfaces() -> list[dict]:
+    net_dir = Path("/sys/class/net")
+    if not net_dir.exists():
+        return []
+
+    result = []
+    for iface_path in sorted(net_dir.iterdir()):
+        iface = iface_path.name
+        if iface == "lo":
+            continue
+        mac = (iface_path / "address").read_text(errors="ignore").strip() if (iface_path / "address").exists() else ""
+        state = (iface_path / "operstate").read_text(errors="ignore").strip() if (iface_path / "operstate").exists() else ""
+        result.append({
+            "name": iface,
+            "mac": mac,
+            "state": state,
+            "ipv4": get_iface_ipv4(iface),
+        })
+    return result
+
+def get_system_summary() -> dict:
+    return {
+        "os": read_os_info(),
+        "kernel": platform.release(),
+        "cpu": read_cpu_model(),
+        "temperature_c": read_cpu_temperature_c(),
+        "ram": read_ram_info(),
+        "storage": read_storage_info(),
+        "network_interfaces": read_network_interfaces(),
+    }
+
+def read_float_target(db, key: str, fallback: float) -> float:
+    row = db.get(SystemTarget, key)
+    if not row:
+        return fallback
+    try:
+        return float(row.value)
+    except (TypeError, ValueError):
+        return fallback
+
+def get_temp_thresholds(db) -> dict:
+    warn = read_float_target(db, "cpu_temp_warn_c", 60.0)
+    critical = read_float_target(db, "cpu_temp_critical_c", 75.0)
+    # Keep deterministic ordering even if DB values are inverted.
+    if warn >= critical:
+        warn, critical = 60.0, 75.0
+    return {"warn_c": warn, "critical_c": critical}
+
 class WanConnectReq(BaseModel):
     ssid: str = Field(min_length=1, max_length=64)
     password: Optional[str] = Field(default=None, max_length=128)
@@ -355,6 +496,7 @@ def dashboard():
     db = SessionLocal()
     try:
         active = db.execute(select(Server).where(Server.is_active == True)).scalars().first()
+        temp_thresholds = get_temp_thresholds(db)
     finally:
         db.close()
 
@@ -384,6 +526,10 @@ def dashboard():
             "hostnames": [c["hostname"] for c in named][:10],
         },
         "dns": get_dns_resolv_conf(),
+        "system": {
+            **get_system_summary(),
+            "temperature_thresholds": temp_thresholds,
+        },
         "services": {
             "hostapd": get_service_active("hostapd"),
             "dnsmasq": get_service_active("dnsmasq"),
@@ -405,6 +551,10 @@ def clients():
 @app.get("/ui")
 def ui():
     return RedirectResponse(url="/", status_code=307)
+
+@app.get("/favicon.ico")
+def favicon():
+    return Response(status_code=204)
 
 @app.get("/wan/networks")
 def wan_networks():

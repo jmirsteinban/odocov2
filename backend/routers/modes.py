@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select, update
 from backend.db.session import SessionLocal
-from backend.db.models import Mode  # 👈 asegurate que exista
+from backend.db.models import Mode
 from typing import List
 
 router = APIRouter(prefix="/api", tags=["modes"])

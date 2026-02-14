@@ -151,7 +151,7 @@ button.ghost {
 .card h3 {
     margin: 0 0 8px;
     font-size: 13px;
-    color: var(--muted);
+    color: #c4cceb;
     font-weight: 600;
     letter-spacing: .3px
 }
@@ -203,6 +203,23 @@ button.ghost {
     gap: 6px
 }
 
+.generalGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 18px;
+}
+
+.tempCfgGrid {
+    margin-top: 8px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+#generalTempPill {
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
 code {
     color: #d7ddff;
     background: rgba(255, 255, 255, .04);
@@ -230,7 +247,8 @@ code {
 .panelHeader h2 {
     margin: 0;
     font-size: 14px;
-    color: var(--text)
+    color: #c4cceb;
+    font-weight: 600
 }
 
 .sub {
@@ -296,6 +314,19 @@ th {
 
 .muted {
     color: var(--muted)
+}
+
+.textAction {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.textAction:hover {
+    text-decoration: underline;
+    text-decoration-color: rgba(255, 255, 255, .35);
 }
 
 .tabs {
@@ -435,13 +466,22 @@ select:-moz-focusring {
     header {
         position: static
     }
+
+    .generalGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .tempCfgGrid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* --- WAN Card Settings Button --- */
 
 
+.generalCard,
 .modeCard,
-wanCard,
+.wanCard,
 .lanCard {
     position: relative;
 }

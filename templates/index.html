@@ -26,12 +26,30 @@
             <div class="btns">
                 <button class="primary" id="btnRefresh">↻ Refrescar</button>
                 <button id="btnScan">📡 Escanear redes</button>
-                <button id="btnInternet">🌐 Probar internet</button>
-                <button class="danger" id="btnClearLog">🧹 Log</button>
             </div>
         </header>
         <!-- OVERVIEW -->
         <section id="tab-overview" class="grid">
+
+            <div class="card span12 generalCard">
+                <button class="cardGear" id="btnGeneralSettings" title="Configuración general"
+                    aria-label="Configuración general"> ⚙️
+                </button>
+                <h3>General</h3>
+                <div class="meta generalGrid">
+                    <div>OS: <code id="generalOs">—</code></div>
+                    <div>
+                        Temperatura CPU: <code id="generalTemp">—</code>
+                        <span id="generalTempPill" class="pill">—</span>
+                    </div>
+                    <div>Procesador: <code id="generalCpu">—</code></div>
+                    <div>RAM: <code id="generalRam">—</code></div>
+                    <div>ROM / Storage: <code id="generalStorage">—</code></div>
+                    <div id="btnInternet" class="textAction" role="button" tabindex="0">
+                        🌐 Internet: <span id="internetStatusPill" class="pill good">En línea</span>
+                    </div>
+                </div>
+            </div>
 
             <div class="card span12 modeCard">
                 <button class="cardGear" id="btnModeSettings" title="Configurar modo" aria-label="Configurar modo"> ⚙️
@@ -40,7 +58,7 @@
 
                 <div class="meta" style="margin-top:6px">
                     <div>
-                        <div class="muted" style="font-size:12px;margin-bottom:6px">Modo actual</div>
+                        <div class="muted" style="font-size:12px;margin-bottom:6px">Actual</div>
                         <input id="modeCurrent" placeholder="Cargando…" readonly />
 
 
@@ -171,6 +189,34 @@
                 </div>
 
             </div>
+
+        </section>
+
+        <!-- GENERAL CONFIG -->
+        <section id="tab-general-config" class="grid hidden">
+            <div class="panel span12">
+                <div class="panelHeader">
+                    <div>
+                        <h2>Configuración General</h2>
+                        <div class="sub">Umbrales de temperatura CPU guardados en DB</div>
+                    </div>
+                    <div class="rowActions">
+                        <button class="small" id="btnTempSave">💾 Guardar umbrales</button>
+                    </div>
+                </div>
+
+                <div class="tempCfgGrid">
+                    <div class="field">
+                        <label>Umbral Alta (°C)</label>
+                        <input id="tempWarnInput" type="number" min="1" step="0.1" placeholder="60" />
+                    </div>
+                    <div class="field">
+                        <label>Umbral Crítica (°C)</label>
+                        <input id="tempCriticalInput" type="number" min="1" step="0.1" placeholder="75" />
+                    </div>
+                </div>
+                <div id="tempCfgMsg" class="muted">Cargando valores actuales…</div>
+            </div>
         </section>
 
         <!-- NETWORKS -->
@@ -256,6 +302,7 @@
                     </div>
                     <div class="rowActions">
                         <button class="small ghost" id="btnCopyServer">📋 Copiar</button>
+                        <button class="small danger" id="btnClearLog">🧹 Log</button>
                     </div>
                 </div>
                 <div class="meta" id="serverBox">
