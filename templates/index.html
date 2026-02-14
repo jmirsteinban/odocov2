@@ -17,7 +17,7 @@
 
         <header>
             <div class="brand" id="brandHome">
-                <div class="logo"></div>
+                <div class="logo">🦌</div>
                 <div class="title">
                     <h1>ODOCO Control Panel</h1>
                     <p>WAN/LAN Router Dashboard • <span id="lastUpdate" class="muted">—</span></p>
@@ -25,9 +25,13 @@
             </div>
             <div class="btns">
                 <button class="primary" id="btnRefresh">↻ Refrescar</button>
-                <button id="btnScan">📡 Escanear redes</button>
             </div>
         </header>
+        <nav class="breadcrumbs" id="breadcrumbs" aria-label="Breadcrumb">
+            <span class="crumb is-link" data-tab="overview">Inicio</span>
+            <span class="crumb-sep">/</span>
+            <span class="crumb current" id="crumbCurrent">Overview</span>
+        </nav>
         <!-- OVERVIEW -->
         <section id="tab-overview" class="grid">
 
@@ -76,48 +80,7 @@
             </div>
 
 
-            <div class="card span6 lanCard">
-                <button class="cardGear" id="btnLanSettings" title="Configurar Lan" aria-label="Configurar Lan">
-                    ⚙️
-                </button>
-                <h3>Access Point / LAN</h3>
-                <div class="kpi">
-                    <div>
-                        <div class="big" id="apSsid">—</div>
-                        <div class="muted" style="font-size:12px;margin-top:4px">
-                            IF: <code id="apIface">—</code> • IP: <code id="apIp">—</code>
-                        </div>
-                    </div>
-                    <span class="pill" id="apPill">—</span>
-                </div>
-                <div class="meta">
-                    <div>DHCP: <code id="dhcpRange">—</code></div>
-                    <div class="muted">Tip: si tenés Ethernet conectado, Windows prioriza esa ruta.</div>
-                </div>
-            </div>
 
-            <div class="card span6 wanCard">
-                <!-- Botón engranaje fijo en esquina -->
-                <button class="cardGear" id="btnWanSettings" title="Configurar WAN" aria-label="Configurar WAN">
-                    ⚙️
-                </button>
-                <h3>WAN Status (wlan0)</h3>
-                <div class="kpi">
-                    <div>
-                        <div class="big" id="wanConn">—</div>
-                        <div class="muted" style="font-size:12px;margin-top:4px">
-                            Estado: <code id="wanState">—</code>
-                        </div>
-                    </div>
-                    <span class="pill" id="wanPill">—</span>
-
-                </div>
-                <div class="meta">
-                    <div>WAN IP: <code id="wanIp">—</code></div>
-                    <div>GW: <code id="wanGw">—</code></div>
-                    <div class="muted" id="wanRoute">—</div>
-                </div>
-            </div>
 
             <div class="card span4">
                 <h3>Servicios</h3>
@@ -171,8 +134,8 @@
             <div class="panel span12">
                 <div class="panelHeader">
                     <div>
-                        <h2>Modos de Funcionamiento</h2>
-                        <div class="sub">lorem • lorem</div>
+                        <h2>⚙️ Configuración Modos de Funcionamiento</h2>
+                        <div class="sub"> </div>
                     </div>
                     <div class="rowActions">
                         <button class="small" id="btnModeSave">💾 Guardar modo</button>
@@ -180,10 +143,56 @@
                 </div>
                 <div>
                     <div class="field">
-                        <label>Seleccionar modo</label>
+                        <label>• Seleccionar modo</label>
                         <select id="modeSelect">
                             <option value="">Cargando…</option>
                         </select>
+                    </div>
+                    <div class="sub">• Asignar Interfaces </div>
+                    <div class="wanLanRow">
+                        <div class="card wanCard">
+
+                            <button class="cardGear" id="btnWanSettings" title="Configurar WAN"
+                                aria-label="Configurar WAN">
+                                ⚙️
+                            </button>
+                            <h3>📡WAN </h3>
+                            <div class="kpi">
+                                <div>
+                                    <div class="big" id="wanConn">—</div>
+                                    <div class="muted" style="font-size:12px;margin-top:4px">
+                                        Estado: <code id="wanState">—</code>
+                                    </div>
+                                </div>
+                                <span class="pill" id="wanPill">—</span>
+
+                            </div>
+                            <div class="meta">
+                                <div>WAN IP: <code id="wanIp">—</code></div>
+                                <div>GW: <code id="wanGw">—</code></div>
+                                <div class="muted" id="wanRoute">—</div>
+                            </div>
+                        </div>
+                        <div class="card lanCard">
+                            <button class="cardGear" id="btnLanSettings" title="Configurar Lan"
+                                aria-label="Configurar Lan">
+                                ⚙️
+                            </button>
+                            <h3>🛜 Access Point / 🖧 LAN</h3>
+                            <div class="kpi">
+                                <div>
+                                    <div class="big" id="apSsid">—</div>
+                                    <div class="muted" style="font-size:12px;margin-top:4px">
+                                        IF: <code id="apIface">—</code> • IP: <code id="apIp">—</code>
+                                    </div>
+                                </div>
+                                <span class="pill" id="apPill">—</span>
+                            </div>
+                            <div class="meta">
+                                <div>DHCP: <code id="dhcpRange">—</code></div>
+                                <div class="muted">Tip: si tenés Ethernet conectado, Windows prioriza esa ruta.</div>
+                            </div>
+                        </div>
                     </div>
 
                 </div>
@@ -228,7 +237,7 @@
                         <div class="sub">Escaneo por nmcli • Conectar abre modal</div>
                     </div>
                     <div class="rowActions">
-                        <button class="small" id="btnScan2">📡 Escanear</button>
+                        <button class="small" id="btnScan">📡 Escanear</button>
                     </div>
                 </div>
                 <table>
@@ -255,7 +264,7 @@
             <div class="panel span12">
                 <div class="panelHeader">
                     <div>
-                        <h2>Access Point / LAN</h2>
+                        <h2>Configuración de Access Point / LAN</h2>
                         <div class="sub">Here Lan Info</div>
                     </div>
                     <div class="rowActions">

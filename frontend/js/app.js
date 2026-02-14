@@ -8,6 +8,13 @@ const API_BASE = window.location.origin; // http://192.168.50.1:8000
 
 let modesCache = []; // solo cache, no hardcode
 let currentModeId = null;
+const TAB_LABELS = {
+    overview: "Overview",
+    modes: "Modos",
+    "general-config": "Configuración General",
+    networks: "WAN",
+    clients: "LAN"
+};
 
 async function loadModesFromDB() {
     const res = await fetchJSON("/api/modes");
@@ -362,9 +369,17 @@ function setTab(name) {
     if (!target) {
         log(`⚠️ Tab no existe: ${name} (volviendo a overview)`);
         document.getElementById("tab-overview")?.classList.remove("hidden");
+        renderBreadcrumb("overview");
         return;
     }
     target.classList.remove("hidden");
+    renderBreadcrumb(name);
+}
+
+function renderBreadcrumb(tabName) {
+    const current = el("crumbCurrent");
+    if (!current) return;
+    current.textContent = TAB_LABELS[tabName] || "Overview";
 }
 
 
@@ -374,7 +389,6 @@ function setTab(name) {
 // Events
 el("btnRefresh").addEventListener("click", refreshAll);
 el("btnScan").addEventListener("click", scanNetworks);
-el("btnScan2").addEventListener("click", scanNetworks);
 el("btnLoadClients").addEventListener("click", loadClients);
 el("btnClients2").addEventListener("click", loadClients);
 el("btnInternet").addEventListener("click", testInternet);
@@ -502,6 +516,15 @@ el("mConnect").addEventListener("click", async () => {
 el("brandHome")?.addEventListener("click", () => {
     setTab("overview");
     log("↩️ Volver a Overview (brand click)");
+});
+
+el("breadcrumbs")?.addEventListener("click", (ev) => {
+    const node = ev.target.closest(".crumb.is-link");
+    if (!node) return;
+    const tab = node.getAttribute("data-tab");
+    if (!tab) return;
+    setTab(tab);
+    log("↩️ Breadcrumb: Inicio");
 });
 
 // ⚙️ Mode settings (abre tab modes)
